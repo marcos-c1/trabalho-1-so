@@ -1,13 +1,13 @@
-run: sensores main
+CFLAGS = -g -pthread
+CC = gcc
+run: sensores
 
 sensores:
-	gcc -c sensores.c -o sensores.o
-	
-main:
-	gcc sensores.o main.c -o main.o
+	$(CC) $(CFLAGS) -c sensores.c -o sensores.o 
+	$(CC) $(CFLAGS) main.c -o main sensores.o
 
 test:
-	gcc test.c && ./a.out
+	gcc test.c -o test
 
 rm:
 	rm *.o
