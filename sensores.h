@@ -9,19 +9,22 @@
 #define HEIGHT 30
 #define MAX_THREADS 100
 
+/* STRUCTURES */
 typedef struct
 {
 	int x;
 	int y;
 } coord;
 
-typedef struct
+typedef struct THREAD_NODE
 {
 	coord c;
 	pthread_t thread;
 	struct THREAD_NODE **vizinhos;
 	int isUp;
+	int has_fire_around;
 	int isBorder;
+	int qtd_vizinhos;
 } THREAD_NODE;
 
 typedef struct
@@ -30,8 +33,11 @@ typedef struct
 	char id;
 } THREAD_NODES;
 
+/* STATIC VARIABLES */
 static THREAD_NODES area[WIDTH][HEIGHT];
 static THREAD_NODE threads[MAX_THREADS];
+static THREAD_NODE **node_on_fire;
+
 
 /* FUNCTIONS */
 void create_area();
@@ -41,6 +47,8 @@ void create_neigh(int size);
 void print_border(int size);
 void put_fire();
 void create_threads(int size);
-void *check_neighbour(void *thread);
+void *check_fire(void *thread);
+void destroy_threads();
+void print_neigh();
 
 #endif
