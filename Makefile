@@ -1,13 +1,16 @@
-CFLAGS = -g -pthread
+CFLAGS = -Wall -g -pthread
 CC = gcc
+OBJDIR = ./obj
+SRCDIR = ./src
+
 run: sensores
 
 sensores:
-	$(CC) $(CFLAGS) -c sensores.c -o sensores.o 
-	$(CC) $(CFLAGS) main.c -o main sensores.o
+	$(CC) $(CFLAGS) -c $(SRCDIR)/sensores.c -o $(OBJDIR)/sensores.o 
+	$(CC) $(CFLAGS) $(SRCDIR)/main.c -o $(OBJDIR)/main.o $(OBJDIR)/sensores.o
 
 test:
-	gcc test.c -o test
+	$(CC) $(CFLAGS) $(SRCDIR)/test.c -o $(OBJDIR)/test.o
 
 rm:
-	rm *.o
+	rm $(OBJDIR)/*.o

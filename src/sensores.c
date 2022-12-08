@@ -1,5 +1,5 @@
-#include "sensores.h"
-#include "utils.h"
+#include "../headers/sensores.h"
+#include "../headers/utils.h"
 
 /* OUTPUT STANDARD FILE */
 FILE *out;
@@ -66,16 +66,15 @@ void *call_central(void *id)
 			node_on_fire = &node_on_fire[1];
 			sleep(2);
 		}
-		calling_central = 0;
 		extinguish_fire = 1;
+		calling_central = 0;
 		pthread_cond_signal(&bomb);
-		pthread_mutex_lock(&lock);
+		pthread_mutex_unlock(&lock);
 	}
 }
 void *check_fire(void *th)
 {
 	THREAD_NODE *t = (struct THREAD_NODE *)th;
-	int k = 1;
 
 	// printf("id: %c\t(%d, %d)\n", area[t->c.x][t->c.y].id, t->c.x, t->c.y);
 	//  Precisa de uma instrução while(1)
@@ -83,9 +82,6 @@ void *check_fire(void *th)
 	{
 		pthread_mutex_lock(&lock);
 		// printf("direita: %c\nesquerda: %c\ncima: %c\nbaixo: %c\nnoroeste: %c\nnordeste: %c\nsudoeste: %c\nsudeste: %c\n", area[t->c.x + 1][t->c.y].id, area[t->c.x - 1][t->c.y].id, area[t->c.x][t->c.y + 1].id, area[t->c.x][t->c.y - 1].id, area[t->c.x - 1][t->c.y + 1].id, area[t->c.x + 1][t->c.y + 1].id,area[t->c.x - 1][t->c.y - 1].id, area[t->c.x + 1][t->c.y + 1].id);
-		if(calling_central)
-			pthread_cond_wait(&fire, &lock);
-
 		if (area[t->c.x + 1][t->c.y].id == 'X' || area[t->c.x - 1][t->c.y].id == 'X' || area[t->c.x][t->c.y + 1].id == 'X' || area[t->c.x][t->c.y - 1].id == 'X')
 		{
 			sleep(1);
@@ -93,6 +89,8 @@ void *check_fire(void *th)
 			node_on_fire = &t;
 			calling_central = 1;
 			pthread_cond_signal(&sensor);
+		} else {
+			pthread_cond_wait(&fire, &lock);
 		}
 		pthread_mutex_unlock(&lock);
 	}
@@ -481,12 +479,11 @@ void create_area()
 
 void print_area()
 {
-	int thread_node = FALSE;
-	int i, k, j, t;
+	int i, j;
 
-	for (i = 0, k = 1; i < WIDTH; i++)
+	for (i = 0; i < WIDTH; i++)
 	{
-		for (j = 0, t = 1; j < HEIGHT; j++)
+		for (j = 0; j < HEIGHT; j++)
 		{
 			if (area[i][j].id == '-' || area[i][j].id == 'T')
 				printf(GREEN(" %c "), area[i][j].id);
