@@ -8,9 +8,9 @@ int main()
 	while (1)
 	{
 		put_fire();
-		//print_area();
+		print_area();
 		sleep(3);
-		//system("clear");
+		system("clear");
 	}
 
 	destroy_threads();
