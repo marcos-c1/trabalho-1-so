@@ -1,7 +1,9 @@
 CFLAGS = -Wall -g -pthread
+TESTFLAGS = -g -pthread
 CC = gcc
 OBJDIR = ./obj
 SRCDIR = ./src
+INCLUDE_SSH = -L/usr/local/lib/ -lssl -lcrypto
 
 run: sensores
 
@@ -10,7 +12,7 @@ sensores:
 	$(CC) $(CFLAGS) $(SRCDIR)/main.c -o $(OBJDIR)/main.o $(OBJDIR)/sensores.o
 
 test:
-	$(CC) $(CFLAGS) $(SRCDIR)/test.c -o $(OBJDIR)/test.o
+	$(CC) $(TESTFLAGS) $(SRCDIR)/test.c $(INCLUDE_SSH) -o $(OBJDIR)/test.o
 
 rm:
 	rm $(OBJDIR)/*.o
