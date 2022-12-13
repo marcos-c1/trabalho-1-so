@@ -117,9 +117,16 @@ void *call_central(void *id)
 		pthread_mutex_unlock(&lock);
 	}
 }
+
+static void cleanup_handler(void *t) 
+{
+	pthread_mutex_unlock(&lock);
+}
+
 void *check_fire(void *th)
 {
 	THREAD_NODE *t = (struct THREAD_NODE *)th;
+	pthread_cleanup_push(cleanup_handler, t); 
 
 	while (1)
 	{
@@ -144,6 +151,7 @@ void *check_fire(void *th)
 		}
 		pthread_mutex_unlock(&lock);
 	}
+	pthread_cleanup_pop(1);
 }
 
 void create_threads(int size)
@@ -188,16 +196,18 @@ void put_fire()
 		c.y = rand() % HEIGHT;
 		if (area[c.x][c.y].id == 'T')
 		{
-			// TODO: Destruir a thread a partir de seus vizinhos
 			area[c.x][c.y].t->isUp = FALSE;
-			// LOG("Queimando uma thread");
+			area[c.x][c.y].id = 'X';
+			pthread_cancel(area[c.x][c.y].t->thread);
+			pthread_join(area[c.x][c.y].t->thread, NULL);
 		}
 		else
 		{
 			area[c.x][c.y].id = 'X';
 			has_fire = 1;
-			pthread_cond_signal(&fire);
 		}
+		pthread_cond_signal(&fire);
+
 	}
 }
 
