@@ -7,10 +7,12 @@ int main()
 
 	while (1)
 	{
-		put_fire();
+		printf("\e[1;1H\e[2J");
 		print_area();
-		sleep(3);
-		system("clear");
+		put_fire();
+		printf("\e[1;1H\e[2J");
+		print_area();
+		sleep(5);
 	}
 
 	destroy_threads();
