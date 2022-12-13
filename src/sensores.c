@@ -14,9 +14,37 @@ int calling_central = FALSE;
 int extinguish_fire = FALSE;
 int fire_extinguished = FALSE;
 
-int min(int x, int y)
+
+coord check_neigh_fire(coord c)
 {
-	return x < y ? x : y;
+	coord fire_coords;
+	if(area[c.x + 1][c.y].id == 'X'){ // LESTE
+		fire_coords.x = c.x + 1;
+		fire_coords.y = c.y;
+	} else if (area[c.x - 1][c.y].id == 'X'){ // OESTE
+		fire_coords.x = c.x - 1;
+		fire_coords.y = c.y;
+	} else if (area[c.x][c.y + 1].id == 'X'){ // NORTE
+		fire_coords.x = c.x;
+		fire_coords.y = c.y + 1;
+	} else if (area[c.x][c.y - 1].id == 'X'){ // SUL
+		fire_coords.x = c.x;
+		fire_coords.y = c.y - 1;
+	} else if (area[c.x - 1][c.y + 1].id == 'X'){ // NOROESTE
+		fire_coords.x = c.x - 1;
+		fire_coords.y = c.y + 1;
+	} else if (area[c.x + 1][c.y + 1].id == 'X'){ // NORDESTE
+		fire_coords.x = c.x + 1;
+		fire_coords.y = c.y + 1;
+	} else if (area[c.x - 1][c.y - 1].id == 'X'){ // SUDOESTE
+		fire_coords.x = c.x - 1;
+		fire_coords.y = c.y - 1;
+	} else { // SUDESTE
+		fire_coords.x = c.x + 1;
+		fire_coords.y = c.y - 1;
+	}
+
+	return fire_coords;	
 }
 
 void *purge_fire(void *id)
@@ -28,29 +56,11 @@ void *purge_fire(void *id)
 		{
 			pthread_cond_wait(&bomb, &lock);
 		}
-		coord c;
-		c.x = (*node_on_fire)->c.x;
-		c.y = (*node_on_fire)->c.y;
+		
+		coord c = check_neigh_fire((*node_on_fire)->c);
+		area[c.x][c.y].id = '-';
 
-		if (area[c.x + 1][c.y].id == 'X') // LESTE
-			area[c.x + 1][c.y].id = '-';
-		else if (area[c.x - 1][c.y].id == 'X') // OESTE
-			area[c.x - 1][c.y].id = '-';
-		else if (area[c.x][c.y + 1].id == 'X') // NORTE
-			area[c.x][c.y + 1].id = '-';
-		else if (area[c.x][c.y - 1].id == 'X') // SUL
-			area[c.x][c.y - 1].id = '-';
-		else if (area[c.x - 1][c.y + 1].id == 'X') // NOROESTE
-			area[c.x - 1][c.y + 1].id = '-';
-		else if (area[c.x + 1][c.y + 1].id == 'X') // NORDESTE
-			area[c.x - 1][c.y + 1].id = '-';
-		else if (area[c.x - 1][c.y - 1].id == 'X') // SUDOESTE
-			area[c.x - 1][c.y - 1].id = '-';
-		else // SUDESTE
-			area[c.x + 1][c.y - 1].id = '-';
-
-		printf("Apagando o fogo perto a (%d, %d)\n", c.x, c.y);
-		sleep(5);
+		sleep(2);
 		extinguish_fire = FALSE;
 		fire_extinguished = TRUE;
 		has_fire = FALSE;
@@ -67,32 +77,32 @@ void *call_central(void *id)
 		{
 			pthread_cond_wait(&sensor, &lock);
 		}
-		printf("To na central, filho.\n");
+		CT ct = get_time();
+		coord c = check_neigh_fire((**node_on_fire).c);
+		FILE* f = fopen("incendios.log", "a+");
+
+		fprintf(f, "ID %s ([%d:%d:%d]): Incêndio nas coordenadas (%d, %d)\n", (**node_on_fire).hash, ct.hour, ct.min, ct.seconds, c.x, c.y);		
+		fclose(f);
+
 		if (((THREAD_NODE *)&node_on_fire)->isBorder)
 		{
 			pthread_cond_signal(&bomb);
 		}
 
-		printf("Iterando os vizinhos da thread sensor..\n");
-
 		THREAD_NODE **next = (*node_on_fire)->vizinhos;
 		while (!(**next).isBorder)
 		{
 			int n = (**next).qtd_vizinhos;
-			printf("NÓ\n\t(%d)(%d)\n", (**next).c.x, (**next).c.y);
 			if (n > 0)
 			{
-				printf("VIZINHOS\n");
 				int min_value = __INT_MAX__;
 				int index_of_min_value = -1;
 				for(int i = 0; i < n; i++){
 					int x_vizinho = (*(**next).vizinhos[i]).c.x;
-					int y_vizinho = (*(**next).vizinhos[i]).c.y;
 					if(min_value > x_vizinho){
 						min_value = x_vizinho;
 						index_of_min_value = i;
 					}
-					printf("\t(%d, %d)\n", x_vizinho, y_vizinho);
 				}
 				next = &((*next)->vizinhos[index_of_min_value]);
 				assert(next != NULL);
@@ -100,6 +110,7 @@ void *call_central(void *id)
 
 			sleep(2);
 		}
+		
 		extinguish_fire = TRUE;
 		calling_central = FALSE;
 		pthread_cond_signal(&bomb);
@@ -117,12 +128,10 @@ void *check_fire(void *th)
 		{
 			pthread_cond_wait(&fire, &lock);
 		}
-		// printf("direita: %c\nesquerda: %c\ncima: %c\nbaixo: %c\nnoroeste: %c\nnordeste: %c\nsudoeste: %c\nsudeste: %c\n", area[t->c.x + 1][t->c.y].id, area[t->c.x - 1][t->c.y].id, area[t->c.x][t->c.y + 1].id, area[t->c.x][t->c.y - 1].id, area[t->c.x - 1][t->c.y + 1].id, area[t->c.x + 1][t->c.y + 1].id,area[t->c.x - 1][t->c.y - 1].id, area[t->c.x + 1][t->c.y + 1].id);
 		if ((area[t->c.x + 1][t->c.y].id == 'X' || area[t->c.x - 1][t->c.y].id == 'X' || area[t->c.x][t->c.y + 1].id == 'X' || area[t->c.x][t->c.y - 1].id == 'X') ||
 			area[t->c.x - 1][t->c.y + 1].id == 'X' || area[t->c.x + 1][t->c.y + 1].id == 'X' || area[t->c.x - 1][t->c.y - 1].id == 'X' || area[t->c.x + 1][t->c.y - 1].id == 'X')
 		{
 			sleep(1);
-			printf("Incêndio na localidade (%d, %d), THREAD %ld\n", t->c.x, t->c.y, pthread_self());
 			node_on_fire = &t;
 			calling_central = TRUE;
 			fire_extinguished = FALSE;
@@ -177,7 +186,6 @@ void put_fire()
 		coord c;
 		c.x = rand() % WIDTH;
 		c.y = rand() % HEIGHT;
-		printf("Fogo em %d, %d\n", c.x, c.y);
 		if (area[c.x][c.y].id == 'T')
 		{
 			// TODO: Destruir a thread a partir de seus vizinhos
@@ -385,7 +393,8 @@ void create_area()
 				threads[it_t].c.x = i;
 				threads[it_t].c.y = j;
 				threads[it_t].isUp = TRUE;
-				threads[it_t].has_fire_around = FALSE;
+				threads[it_t].hash = malloc(sizeof(MAX_WORD_LENGTH));
+				randID(threads[it_t].hash);
 				area[i][j].id = 'T';
 				area[i][j].t = (THREAD_NODE *)malloc(sizeof(THREAD_NODE));
 				area[i][j].t = &threads[it_t];
@@ -419,12 +428,4 @@ void print_area()
 		}
 		printf("\n");
 	}
-}
-
-void get_time()
-{
-	time_t rawtime = time(NULL);
-	struct tm *timeinfo;
-	timeinfo = localtime(&rawtime);
-	printf("[%d:%d:%d]\n", timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec);
 }
