@@ -22,7 +22,7 @@ typedef struct THREAD_NODE
 	pthread_t thread;
 	struct THREAD_NODE **vizinhos;
 	int isUp;
-	int has_fire_around;
+	char *hash;
 	int isBorder;
 	int qtd_vizinhos;
 } THREAD_NODE;
@@ -42,7 +42,6 @@ static THREAD_NODE **node_on_fire;
 /* FUNCTIONS */
 void create_area();
 void print_area();
-void get_time();
 void create_neigh(int size);
 void print_border(int size);
 void put_fire();
@@ -50,5 +49,6 @@ void create_threads(int size);
 void *check_fire(void *thread);
 void destroy_threads();
 void print_neigh();
+coord check_neigh_fire(coord c);
 
 #endif
