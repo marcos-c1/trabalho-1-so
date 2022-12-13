@@ -415,16 +415,34 @@ void create_area()
 
 void print_area()
 {
-	int i, j;
+	int i, j, k = 4;
 
+	while(k != 0){
+		printf(GREEN(" "));
+		k--;
+	}
+	for(k = 0; k < HEIGHT; k++){
+		if(k < 10) 
+			printf(GREEN("%d  "), k);
+		else {
+			if(k == 29)
+				printf(GREEN("%d"), k);
+			else
+				printf(GREEN("%d "), k);
+		}
+	}
+	printf("\n");
 	for (i = 0; i < WIDTH; i++)
 	{
+		if(i < 10) printf(GREEN("%d  "), i);
+		else printf(GREEN("%d "), i);
+		
 		for (j = 0; j < HEIGHT; j++)
 		{
 			if (area[i][j].id == '-' || area[i][j].id == 'T')
 				printf(GREEN(" %c "), area[i][j].id);
 			else if (area[i][j].id == 'X')
-				printf(RED(" %c "), area[i][j].id);
+				printf(RED(" @ "));
 		}
 		printf("\n");
 	}

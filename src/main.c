@@ -7,10 +7,11 @@ int main()
 
 	while (1)
 	{
-		printf("\e[1;1H\e[2J");
+		system("clear");
 		print_area();
 		put_fire();
-		printf("\e[1;1H\e[2J");
+		fflush(stdout);
+		system("clear");
 		print_area();
 		sleep(5);
 	}
